@@ -111,7 +111,7 @@ class MazeEnvironment(BaseEnvironment):
                 except ValueError:
                     pass
             self.door_open = True
-            self.door_timer = 20
+            self.door_timer = 3000
             self.update_grid()
 
         if self.door_open:

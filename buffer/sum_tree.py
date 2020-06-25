@@ -58,6 +58,10 @@ class SumTree:
         self.tree[idx] = p
         self._propagate(idx, change)
 
+    def update_value(self, idx, val):
+        dataIdx = idx - self.capacity + 1
+        self.data[dataIdx] = val
+
     # get priority and sample
     def get(self, s):
         idx = self._retrieve(0, s)

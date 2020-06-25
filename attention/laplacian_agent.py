@@ -60,8 +60,8 @@ class SimpleRNN(nn.Module):
             # hidden *= 1 + self.actions[q_idx]
             hidden = hidden * (1 + self.actions[action_batch[i]])
 
-            # hiddens.append(hidden.detach())
-            hiddens.append(hidden)
+            hiddens.append(hidden.detach())
+            # hiddens.append(hidden)
 
             if discount_batch[i].item() == 0:
                 hidden = self.initHidden()
@@ -362,7 +362,9 @@ class RNNAgent(agent.BaseAgent):
         # loss += (1- hidden_batch[-1].dot(state_output[-1].squeeze()) / hidden_batch[-1].norm() * state_output[-1].norm()) * np.sqrt(50)
         # loss += (1- hidden_batch[0].dot(state_output[-1].squeeze()) / hidden_batch[0].norm() * state_output[-1].norm()) * np.sqrt(50)
         state_outputs = torch.cat(state_output)
-        loss += (1 - torch.mean(cos(state_outputs[:-1], state_outputs[1:]))) #* np.sqrt(50)
+        # loss += (1 - torch.mean(cos(state_outputs[:-1], state_outputs[1:]))) #* np.sqrt(50)
+        # loss += torch.mean(cos(state_outputs[:-1], state_outputs[1:]))
+        # loss += torch.mean(cos(hidden_batch[0:1], state_outputs[-2:-1]))
 
 
         self.optimizer.zero_grad()
