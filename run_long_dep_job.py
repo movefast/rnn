@@ -3,7 +3,6 @@
 import os
 import fire
 import numpy as np
-import matplotlib.pyplot as plt
 import agent
 from gridworld_with_door import MazeEnvironment
 from tqdm import tqdm
@@ -172,7 +171,7 @@ def train(agent_idxes):
     all_history = {}
 
 
-    num_runs = 1
+    num_runs = 30
     num_episodes = 500
     Environment = envs['Grid-World']
 
