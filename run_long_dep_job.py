@@ -11,6 +11,7 @@ from mile1.nn_agent import LinearAgent as NNAgent
 from mile1.rnn_agent import RNNAgent as RNNAgent
 from mile1.gru_agent import RNNAgent as RNNAgentGRU
 from mile1.fpp_agent import RNNAgent as FPPAgent
+from mile1.uoro_agent import UOROAgent as UOROAgent
 import numpy as np
 import torch
 
@@ -55,6 +56,7 @@ agents = {
     "RNN": RNNAgent,
     "GRU": RNNAgentGRU,
     "FPP": FPPAgent,
+    "UORO": UOROAgent,
 }
 
 
@@ -95,6 +97,7 @@ agent_infos = {
     "GRU_Trace": {"step_size": 1e-3},
     "RNN_Action": {"step_size": 1e-3},
     "FPP": {"step_size": 1e-3, "beta":.5},
+    "UORO": {"step_size": 3e-4}
 }
 
 
