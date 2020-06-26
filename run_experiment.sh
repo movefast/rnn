@@ -14,5 +14,4 @@
 #SBATCH --job-name=fpp_experiment
 
 
-echo "[$1]"
-python run_long_dep_job.py --agent_idxes="[$1]"
+python run_long_dep_job.py --agent_idxes="[3]"

@@ -139,3 +139,5 @@ cython_debug/
 
 # metrics dir
 metrics/
+
+slurm*
