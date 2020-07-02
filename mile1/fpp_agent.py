@@ -18,7 +18,7 @@ class SimpleRNN(nn.Module):
         self.i2h = nn.Linear(input_size + hidden_size, hidden_size)
         self.i2o = nn.Linear(input_size + hidden_size, output_size)
         self.tanh = nn.Tanh()
-        self.actions = nn.Parameter(torch.normal(0, .01, (4, hidden_size)))
+        # self.actions = nn.Parameter(torch.normal(0, .01, (4, hidden_size)))
 
     def forward(self, inp, hidden):
         output = []
@@ -45,7 +45,7 @@ class SimpleRNN(nn.Module):
             hidden = self.i2h(combined)
             hidden = self.tanh(hidden)
             output.append(self.i2o(combined))
-            hidden = hidden * (1 + self.actions[action_batch[i]])
+            # hidden = hidden * (1 + self.actions[action_batch[i]])
             hiddens.append(hidden.detach())
             if discount_batch[i].item() == 0:
                 hidden = self.initHidden()
@@ -127,8 +127,8 @@ class RNNAgent(agent.BaseAgent):
             action = self.rand_generator.randint(self.num_actions)
         else:
             action = self.argmax(current_q)
-        with torch.no_grad():
-            self.hidden *= 1 + self.rnn.actions[action]
+        # with torch.no_grad():
+        #     self.hidden *= 1 + self.rnn.actions[action]
 
         self.prev_action_value = current_q[action]
         self.prev_state = state
@@ -162,8 +162,8 @@ class RNNAgent(agent.BaseAgent):
             action = self.rand_generator.randint(self.num_actions)
         else:
             action = self.argmax(current_q)
-        with torch.no_grad():
-            self.hidden *= 1 + self.rnn.actions[action]
+        # with torch.no_grad():
+        #     self.hidden *= 1 + self.rnn.actions[action]
 
         self.prev_action_value = current_q[action]
         self.prev_state = state

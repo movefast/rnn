@@ -125,8 +125,6 @@ class MazeEnvironment(BaseEnvironment):
             reward = 1.0
             # reward = 0.0
             is_terminal = True
-        # elif self.steps == 500:
-        #     is_terminal = True
         else:
             self.steps += 1
         self.reward_obs_term = [reward, self.get_state_features(self.current_state), is_terminal]

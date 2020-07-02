@@ -21,8 +21,6 @@ class Memory:  # stored as ( s, a, r, s_ ) in SumTree
 
     def add(self, error, *args):
         p = self._get_priority(error)
-        if p == 0:
-            import pdb; pdb.set_trace()
         self.tree.add(p, Transition(*args))
 
     def sample(self, n):
