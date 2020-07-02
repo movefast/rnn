@@ -174,8 +174,8 @@ def train(agent_idxes, T=10, lr=1e-3, beta=1):
     all_history = {}
 
 
-    num_runs = 1
-    num_episodes = 5
+    num_runs = 30
+    num_episodes = 500
     Environment = envs['Grid-World']
 
     mb = master_bar(env_infos.items())
