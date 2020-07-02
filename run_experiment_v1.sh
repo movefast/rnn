@@ -12,11 +12,6 @@
 #SBATCH --mail-type=FAIL
 
 #SBATCH --job-name=fpp_experiment
-for FILE in *.fasta; do
-echo ${FILE}
-sbatch -p serial_requeue -t 10 --mem=200 --wrap="gzip ${FILE}"
-sleep 1 # pause to be kind to the scheduler
-done
 
 T_list=(5 10 20)
 lr_list=(3e-3 1e-3 3e-4 1e-4)
