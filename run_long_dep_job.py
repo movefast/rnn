@@ -98,7 +98,7 @@ agent_infos = {
     "GRU_Trace": {"step_size": 1e-3},
     "RNN_Action": {"step_size": 1e-3},
     # "FPP": {"step_size": 3e-4, "beta":1.5},
-    "FPP": {'discount': 0.9, 'beta': 0.5, 'step_size': 0.001},
+    "FPP": {'discount': 0.9, 'beta': 1.5, 'step_size': 0.001},
     "UORO": {"step_size": 3e-4},
 }
 
