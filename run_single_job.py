@@ -13,8 +13,8 @@ from mile1.gru_agent import RNNAgent as RNNAgentGRU
 from mile1.gru_fpp_agent import RNNAgent as FPPAgent
 from mile1.uoro_agent import UOROAgent as UOROAgent
 from mile1.random_agent import RNNAgent as RandomAgent
-from mile1.trace_agent import RNNAgent as TraceAgent
-from mile1.stack_trace_agent import RNNAgent as StackTraceAgent
+from mile1.trace_agent import LinearAgent as TraceAgent
+from mile1.stack_trace_agent import LinearAgent as StackTraceAgent
 import numpy as np
 import torch
 

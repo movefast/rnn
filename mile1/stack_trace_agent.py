@@ -3,58 +3,27 @@ import agent
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-# from replay_buffer_episodic import ReplayMemory, Transition
-from buffer.replay_buffer import ReplayMemory, Transition
+from replay_buffer_old import ReplayMemory, Transition
 from buffer.replay_buffer import sliceable_deque
 
-criterion = torch.nn.SmoothL1Loss()
+criterion = torch.nn.MSELoss()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+class SimpleNN(nn.Module):
+    def __init__(self, input_size, output_size):
+        super(SimpleNN, self).__init__()
+        self.tanh = nn.ReLU()
+        self.i2h = nn.Linear(input_size, input_size//2, bias=False)
+        self.h2o = nn.Linear(input_size//2, output_size, bias=False)
 
-class SimpleRNN(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(SimpleRNN, self).__init__()
-        self.hidden_size = hidden_size
-        self.rnn = nn.GRU(input_size, hidden_size, 1)
-        self.decoder = nn.Linear(input_size, output_size)
-        self.tanh = nn.Tanh()
-        self.actions = nn.Parameter(torch.normal(0, .01, (4, hidden_size)))
-
-    def forward(self, inp, hidden):
-        output = [] 
-        hiddens = []
-        if len(inp.size()) == 2:
-            inp = inp.unsqueeze(1)
-        output, hidden = self.rnn(inp, hidden)
-        decoded = self.decoder(output)
-        return decoded, hidden
-
-    def batch(self, inp, hidden, discount_batch, action_batch):
-        outputs = []
-        hiddens = []
-        if len(inp.size()) == 2:
-            inp = inp.unsqueeze(1)
-        
-        self.rnn(inp, hidden)
-        for i in range(inp.size(0)):
-            x = inp[i:i+1]
-            output, hidden = self.rnn(x, hidden)
-            outputs.append(self.decoder(output))
-            # q_vals = F.softmax(output[-1], -1)
-            # q_idx = q_vals.max(1)[1]
-            # hidden *= 1 + self.actions[q_idx]
-            # hidden = hidden * (1 + F.tanh(self.actions[action_batch[i]]))
-            hiddens.append(hidden.detach())
-
-            if discount_batch[i].item() == 0:
-                hidden = self.initHidden()
-        return torch.cat(outputs), hiddens
-
-    def initHidden(self):
-        return torch.zeros(1, 1, self.hidden_size).to(device)
+    def forward(self, x):
+        x = self.i2h(x)
+        x = self.tanh(x)
+        x = self.h2o(x)
+        return x
 
 
-class RNNAgent(agent.BaseAgent):
+class LinearAgent(agent.BaseAgent):
     def agent_init(self, agent_init_info):
         """Setup for the agent called when the experiment first starts.
 
@@ -74,33 +43,31 @@ class RNNAgent(agent.BaseAgent):
         self.num_states = agent_init_info["num_states"]
         self.epsilon = agent_init_info["epsilon"]
         self.step_size = agent_init_info["step_size"]
-
         self.discount = agent_init_info["discount"]
         self.rand_generator = np.random.RandomState(agent_init_info["seed"])
         self.T = agent_init_info.get("T",10)
-            
+        self.exp_decay = 2 / (1 + self.T)
         self.trace = sliceable_deque(maxlen=self.T)
         for _ in range(self.T):
             self.trace.append(torch.zeros(1, self.num_states+1).to(device))
-        self.rnn = SimpleRNN((self.num_states+1)*self.T, (self.num_states+1)*self.T,self.num_actions).to(device)
-        self.target_rnn = SimpleRNN((self.num_states+1)*self.T, (self.num_states+1)*self.T,self.num_actions).to(device)
-        self.update_target()
-        self.optimizer = torch.optim.Adam(self.rnn.parameters(), lr=self.step_size)
-        self.buffer = ReplayMemory(1000)
-        self.tau = .5
-        self.flag = False
-        self.train_steps = 0    
 
+        self.nn = SimpleNN((self.num_states+1)*self.T, self.num_actions).to(device)
+        # self.weights_init(self.nn)
+        self.target_nn = SimpleNN((self.num_states+1)*self.T, self.num_actions).to(device)
+        self.update_target()
+        self.optimizer = torch.optim.Adam(self.nn.parameters(), lr=self.step_size)
+        self.buffer = ReplayMemory(1000)
+        self.updates = 0
+
+    def weights_init(self, m):
+        classname = m.__class__.__name__
+        if classname.find('Linear') != -1:
+            torch.nn.init.xavier_uniform(m.weight)
 
     def get_state_feature(self, state):
         state, is_door = state
         state = np.eye(self.num_states)[state]
         state = torch.Tensor(state).to(device)
-
-        # if self.is_door is None or is_door is True:
-        #     self.is_door = int(is_door)
-        # else:
-        #     self.is_door = self.is_door * .9 + is_door * .1
         self.is_door = int(is_door)
         is_door = torch.Tensor([float(self.is_door)]).to(device)
         self.trace.append(torch.cat([state, is_door])[None, ...])
@@ -120,26 +87,20 @@ class RNNAgent(agent.BaseAgent):
         self.is_door = None
         self.feature = None
         state = self.get_state_feature(state)
-        self.hidden = self.rnn.initHidden()
         with torch.no_grad():
-            current_q, self.hidden = self.rnn(state, self.hidden)
-            current_q = F.softmax(current_q, -1)
+            current_q = self.nn(state)
         current_q.squeeze_()
         if self.rand_generator.rand() < self.epsilon:
             action = self.rand_generator.randint(self.num_actions)
         else:
             action = self.argmax(current_q)
-        # with torch.no_grad():
-        #     self.hidden *= (1 + F.tanh(self.rnn.actions[action]))
-
         self.prev_action_value = current_q[action]
         self.prev_state = state
         self.prev_action = action
         self.steps = 0
-        
         return action
 
-    def agent_step(self, reward, state):    
+    def agent_step(self, reward, state):
         """A step taken by the agent.
         Args:
             reward (float): the reward received for taking the last action taken
@@ -149,31 +110,22 @@ class RNNAgent(agent.BaseAgent):
         Returns:
             action (int): the action the agent is taking.
         """
-
         # Choose action using epsilon greedy.
         state = self.get_state_feature(state)
-
-        self.buffer.push(self.prev_state, self.prev_action, reward, self.hidden.detach(), self.discount)
+        self.buffer.push(self.prev_state, self.prev_action, state, reward)
 
         with torch.no_grad():
-            current_q, self.hidden = self.rnn(state, self.hidden)
-            current_q = F.softmax(current_q, -1)
+            current_q = self.nn(state)
         current_q.squeeze_()
-        # self.epsilon = max(0.1, self.epsilon * 0.98)
-
         if self.rand_generator.rand() < self.epsilon:
             action = self.rand_generator.randint(self.num_actions)
         else:
             action = self.argmax(current_q)
-        # with torch.no_grad():
-        #     self.hidden *= 1 + F.tanh(self.rnn.actions[action])
-
         self.prev_action_value = current_q[action]
         self.prev_state = state
         self.prev_action = action
         self.steps += 1
-
-        if len(self.buffer) > self.T+1:
+        if len(self.buffer) > 1:
             self.batch_train()
         return action
 
@@ -185,61 +137,45 @@ class RNNAgent(agent.BaseAgent):
         """
         state = self.get_state_feature(state)
         if append_buffer:
-            self.buffer.push(self.prev_state, self.prev_action, reward, self.hidden.detach(), 0)
-            self.flag = True
-
-        if len(self.buffer) > self.T+1:
-            self.batch_train()
+            self.buffer.push(self.prev_state, self.prev_action, state, reward)
+        self.batch_train()
 
     def batch_train(self):
-        self.train_steps += 1
-        self.rnn.train()
-        transitions = self.buffer.sample_successive(self.T+1)
-        # batch = transitions[0]        
+        self.updates += 1
+        self.nn.train()
+        transitions = self.buffer.sample(1)
         batch = Transition(*zip(*transitions))
+        state_batch = torch.cat(batch.state)
+        action_batch = torch.LongTensor(batch.action).view(-1, 1).to(device)
+        new_state_batch = torch.cat(batch.new_state)
+        reward_batch = torch.FloatTensor(batch.reward).to(device)
+        non_final_mask = (reward_batch == 0)
 
-        state_batch = torch.cat(batch.state[:-1])
-        next_state_batch = torch.cat(batch.state[1:])
-
-        action_batch = torch.LongTensor(batch.action[:-1]).view(-1, 1).to(device)
-        next_action_batch = torch.LongTensor(batch.action[1:]).view(-1, 1).to(device)
-
-        reward_batch = torch.FloatTensor(batch.reward[:-1]).to(device)
-        hidden_batch = batch.hidden[0]
-        next_hidden_batch = batch.hidden[1] 
-
-        discount_batch = torch.FloatTensor(batch.discount[:-1]).to(device)
-        next_discount_batch = torch.FloatTensor(batch.discount[1:]).to(device)
-
-        current_q, _ = self.rnn.batch(state_batch, hidden_batch, discount_batch, action_batch)
-        current_q = current_q.squeeze()
+        current_q = self.nn(state_batch)
         q_learning_action_values = current_q.gather(1, action_batch)
         with torch.no_grad():
-            new_q, _ = self.target_rnn.batch(next_state_batch, next_hidden_batch, next_discount_batch, next_action_batch)
-        max_q = new_q.max(2)[0]
+            new_q = self.target_nn(new_state_batch)
+        max_q = new_q.max(1)[0]
         target = reward_batch
-        target += discount_batch * max_q.squeeze_()
-
+        target[non_final_mask] += self.discount * max_q[non_final_mask]
         target = target.view(-1, 1)
-        loss = criterion(q_learning_action_values[-1], target[-1])
+        loss = criterion(q_learning_action_values, target)
 
         self.optimizer.zero_grad()
         loss.backward()
-        for param in self.rnn.parameters():
-            if param.grad is not None:
-                param.grad.data.clamp_(-1, 1)
+        for param in self.nn.parameters():
+            param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
-        if self.train_steps % 100 == 0:
+        if self.updates % 100 == 0:
             self.update()
 
     # def update(self):
     #     # target network update
-    #     for target_param, param in zip(self.target_rnn.parameters(), self.rnn.parameters()):
-    #         target_param.data.copy_(
-    #             self.tau * param + (1 - self.tau) * target_param)
-
-    def update(self):
-        self.target_rnn.load_state_dict(self.rnn.state_dict())
+    #     for target_param, param in zip(self.target_nn.parameters(), self.nn.parameters()):
+    #         target_param.data.copy_(self.tau * param + (1 - self.tau) * target_param)
 
     def update_target(self):
-        self.target_rnn.load_state_dict(self.rnn.state_dict())
+        self.target_nn.load_state_dict(self.nn.state_dict())
+
+    def update(self):
+        self.target_nn.load_state_dict(self.nn.state_dict())
