@@ -12,6 +12,9 @@ from mile1.gru_agent import RNNAgent as RNNAgentGRU
 # from mile1.fpp_agent import RNNAgent as FPPAgent
 from mile1.gru_fpp_agent import RNNAgent as FPPAgent
 from mile1.uoro_agent import UOROAgent as UOROAgent
+from mile1.random_agent import RNNAgent as RandomAgent
+from mile1.trace_agent import RNNAgent as TraceAgent
+from mile1.stack_trace_agent import RNNAgent as StackTraceAgent
 import numpy as np
 import torch
 
@@ -57,6 +60,9 @@ agents = {
     "GRU": RNNAgentGRU,
     "FPP": FPPAgent,
     "UORO": UOROAgent,
+    "Random": RandomAgent,
+    "Trace": TraceAgent,
+    "StackTrace": StackTraceAgent,
 }
 
 
@@ -97,8 +103,11 @@ agent_infos = {
     "GRU_Trace": {"step_size": 1e-3},
     "RNN_Action": {"step_size": 1e-3},
     # "FPP": {"step_size": 3e-4, "beta":1.5},
-    "FPP": {'beta': 0.5, 'step_size': 0.001},
+    "FPP": {'beta': 1.5, 'step_size': 0.001},
     "UORO": {"step_size": 3e-4},
+    "Random": {"step_size": 1e-3},
+    "Trace": {"step_size": 1e-3},
+    "StackTrace": {"step_size": 1e-3},
 }
 
 
