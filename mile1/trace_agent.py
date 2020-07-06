@@ -1,8 +1,9 @@
 import numpy as np
-import agent
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+import agent
 from replay_buffer_old import ReplayMemory, Transition
 
 criterion = torch.nn.MSELoss()
@@ -73,7 +74,10 @@ class LinearAgent(agent.BaseAgent):
         if self.feature is None:
             self.feature = torch.cat([state, is_door])[None, ...]
         else:
-            self.feature = self.feature + self.exp_decay * (torch.cat([state, is_door])[None, ...] - self.feature)
+            # 1)
+            # self.feature = self.feature + self.exp_decay * (torch.cat([state, is_door])[None, ...] - self.feature)
+            # 2)
+            self.feature = (1 - self.exp_decay) * self.feature + self.exp_decay * torch.cat([state, is_door])[None, ...]
         return self.feature
 
     def agent_start(self, state):
