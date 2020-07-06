@@ -45,7 +45,10 @@ class LinearAgent(agent.BaseAgent):
         self.discount = agent_init_info["discount"]
         self.rand_generator = np.random.RandomState(agent_init_info["seed"])
         self.T = agent_init_info.get("T",10)
-        self.exp_decay = 2 / (1 + self.T)
+        # 1) exponential average
+        # self.exp_decay = 2 / (1 + self.T)
+        # 2) rl exponential decay
+        self.exp_decay = 1 - 1 / self.T
 
 
         self.nn = SimpleNN(self.num_states+1, self.num_actions).to(device)
