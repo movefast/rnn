@@ -221,7 +221,7 @@ def train(agent_idxes, T=10, lr=1e-3, beta=1, hidden_size=50):
                 agent_info["seed"] = run
                 np.random.seed(run)
                 agent.agent_init(agent_info)
-                if hasattr(agent, "hidden_size"):
+                if hasattr(agent, "hidden_size") and hasattr(agent, "T"):
                     print(f"T:{agent.T}; learning rate: {agent.step_size}; hidden size: {agent.hidden_size}")
                 elif hasattr(agent, "T"):
                     print(f"T:{agent.T}; learning rate: {agent.step_size}")
@@ -243,7 +243,10 @@ def train(agent_idxes, T=10, lr=1e-3, beta=1, hidden_size=50):
                 all_reward_sums[env_name].setdefault(algorithm, []).append(reward_sums)
                 all_state_visits[env_name].setdefault(algorithm, []).append(state_visits)
     name_str = '_'.join([str(x) for x in agent_idxes])#+f'_{agent.step_size}'
-    file_path = f'metrics/{agent.T}/{agent.step_size}/all_reward_sums_{name_str}.torch'
+    if hasattr(agent, "T"):
+        file_path = f'metrics/{agent.T}/{agent.step_size}/all_reward_sums_{name_str}.torch'
+    else:
+        file_path = f'metrics/{T}/{agent.step_size}/all_reward_sums_{name_str}.torch'
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
