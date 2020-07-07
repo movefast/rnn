@@ -9,6 +9,7 @@ from fastprogress.fastprogress import master_bar, progress_bar
 from tqdm import tqdm
 
 from gridworld_with_door import MazeEnvironment
+from mile1.esn_agent import RNNAgent as ESNAgent
 from mile1.gru_agent import RNNAgent as RNNAgentGRU
 # from mile1.fpp_agent import RNNAgent as FPPAgent
 from mile1.gru_fpp_agent import RNNAgent as FPPAgent
@@ -56,14 +57,24 @@ def run_episode(env, agent, state_visits=None, keep_history=False):
         return sum_of_rewards
 
 agents = {
+    # 0
     "NN": NNAgent,
+    # 1
     "RNN": RNNAgent,
+    # 2
     "GRU": RNNAgentGRU,
+    # 3
     "FPP": FPPAgent,
+    # 4
     "UORO": UOROAgent,
+    # 5
     "Random": RandomAgent,
+    # 6
     "Trace": TraceAgent,
+    # 7
     "StackTrace": StackTraceAgent,
+    # 8
+    "ESN": ESNAgent,
 }
 
 
@@ -109,6 +120,7 @@ agent_infos = {
     "Random": {"step_size": 1e-3},
     "Trace": {"step_size": 1e-3},
     "StackTrace": {"step_size": 1e-3},
+    "ESNAgent": {"step_size": 1e-3},
 }
 
 
@@ -178,7 +190,7 @@ env_infos = {
 
 
 # ### Train
-def train(agent_idxes, T=10, lr=1e-3, beta=1):
+def train(agent_idxes, T=10, lr=1e-3, beta=1, hidden_size=50):
     all_reward_sums = {} # Contains sum of rewards during episode
     all_state_visits = {} # Contains state visit counts during the last 10 episodes
     all_history = {}
@@ -205,11 +217,13 @@ def train(agent_idxes, T=10, lr=1e-3, beta=1):
                 env = Environment()
                 env.env_init(env_info)
                 # print(env_info)
-                agent_info = {"num_actions": 4, "num_states": env.cols * env.rows, "epsilon": .1, "discount": .9, "T": T, "step_size": lr, "beta": beta} 
+                agent_info = {"num_actions": 4, "num_states": env.cols * env.rows, "epsilon": .1, "discount": .9, "T": T, "step_size": lr, "beta": beta, "hidden_size": hidden_size} 
                 agent_info["seed"] = run
                 np.random.seed(run)
                 agent.agent_init(agent_info)
-                if hasattr(agent, "T"):
+                if hasattr(agent, "hidden_size"):
+                    print(f"T:{agent.T}; learning rate: {agent.step_size}; hidden size: {agent.hidden_size}")
+                elif hasattr(agent, "T"):
                     print(f"T:{agent.T}; learning rate: {agent.step_size}")
                 reward_sums = []
                 state_visits = np.zeros(env.cols * env.rows)
