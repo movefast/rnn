@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 # coding: utf-8
 import os
+
 import fire
 import numpy as np
-from gridworld_with_door import MazeEnvironment
-from tqdm import tqdm
+import torch
 from fastprogress.fastprogress import master_bar, progress_bar
-from mile1.nn_agent import LinearAgent as NNAgent
-from mile1.rnn_agent import RNNAgent as RNNAgent
+from tqdm import tqdm
+
+from gridworld_with_door import MazeEnvironment
 from mile1.gru_agent import RNNAgent as RNNAgentGRU
 # from mile1.fpp_agent import RNNAgent as FPPAgent
 from mile1.gru_fpp_agent import RNNAgent as FPPAgent
-from mile1.uoro_agent import UOROAgent as UOROAgent
+from mile1.nn_agent import LinearAgent as NNAgent
 from mile1.random_agent import RNNAgent as RandomAgent
-from mile1.trace_agent import LinearAgent as TraceAgent
+from mile1.rnn_agent import RNNAgent as RNNAgent
 from mile1.stack_trace_agent import LinearAgent as StackTraceAgent
-import numpy as np
-import torch
+from mile1.trace_agent import LinearAgent as TraceAgent
+from mile1.uoro_agent import UOROAgent as UOROAgent
 
 
 def run_episode(env, agent, state_visits=None, keep_history=False):
@@ -208,7 +209,8 @@ def train(agent_idxes, T=10, lr=1e-3, beta=1):
                 agent_info["seed"] = run
                 np.random.seed(run)
                 agent.agent_init(agent_info)
-                print(f"T:{agent.T}; learning rate: {agent.step_size}")
+                if hasattr(agent, "T"):
+                    print(f"T:{agent.T}; learning rate: {agent.step_size}")
                 reward_sums = []
                 state_visits = np.zeros(env.cols * env.rows)
                 epsilon = 1
