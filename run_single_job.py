@@ -243,8 +243,8 @@ def train(agent_idxes, T=10, lr=1e-3, beta=1, hidden_size=50):
                 all_reward_sums[env_name].setdefault(algorithm, []).append(reward_sums)
                 all_state_visits[env_name].setdefault(algorithm, []).append(state_visits)
     name_str = '_'.join([str(x) for x in agent_idxes])#+f'_{agent.step_size}'
-    if hasattr(agent, "T"):
-        file_path = f'metrics/{agent.T}/{agent.step_size}/all_reward_sums_{name_str}.torch'
+    if agent_idxes[0] == 8:
+        file_path = f'metrics/{agent.T}/{agent.step_size}/all_reward_sums_{name_str}_{agent.hidden_size}.torch'
     else:
         file_path = f'metrics/{T}/{agent.step_size}/all_reward_sums_{name_str}.torch'
     directory = os.path.dirname(file_path)
