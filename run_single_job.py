@@ -17,6 +17,7 @@ from mile1.nn_agent import LinearAgent as NNAgent
 from mile1.random_agent import RNNAgent as RandomAgent
 from mile1.rnn_agent import RNNAgent as RNNAgent
 from mile1.stack_trace_agent import LinearAgent as StackTraceAgent
+from mile1.stim_trace_agent import LinearAgent as StimTraceAgent
 from mile1.trace_agent import LinearAgent as TraceAgent
 from mile1.uoro_agent import UOROAgent as UOROAgent
 
@@ -75,6 +76,8 @@ agents = {
     "StackTrace": StackTraceAgent,
     # 8
     "ESN": ESNAgent,
+    # 9
+    "StimTrace": StimTraceAgent,
 }
 
 
@@ -121,6 +124,7 @@ agent_infos = {
     "Trace": {"step_size": 1e-3},
     "StackTrace": {"step_size": 1e-3},
     "ESNAgent": {"step_size": 1e-3},
+    "StimTrace": {"step_size": 1e-3},
 }
 
 
