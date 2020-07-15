@@ -9,6 +9,8 @@ from fastprogress.fastprogress import master_bar, progress_bar
 from tqdm import tqdm
 
 from gridworld_with_door import MazeEnvironment
+from mile1.dutch_feat_rnn_agent import RNNAgent as FeatTraceAgent
+from mile1.dutch_state_rnn_agent import RNNAgent as StateTraceAgent
 from mile1.dutch_trace_agent import LinearAgent as DutchTraceAgent
 from mile1.esn_agent import RNNAgent as ESNAgent
 from mile1.gru_agent import RNNAgent as RNNAgentGRU
@@ -81,6 +83,10 @@ agents = {
     "StimTrace": StimTraceAgent,
     # 10
     "DutchTrace": DutchTraceAgent,
+    # 11
+    "FeatTrace": FeatTraceAgent,
+    # 12
+    "StateTrace": StateTraceAgent,
 }
 
 
