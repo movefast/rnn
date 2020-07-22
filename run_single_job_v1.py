@@ -233,9 +233,9 @@ def train(agent_idx, env_name="DoorWorldWide3", T=10, lr=1e-3, beta=1, hidden_si
         agent_info["seed"] = run
         np.random.seed(run)
         agent.agent_init(agent_info)
-        if agent_idxes[0] == 8:
+        if agent_idx == 8:
             print(f"T:{agent.T}; learning rate: {agent.step_size}; hidden size: {agent.hidden_size}")
-        elif agent_idxes[0] == 10:
+        elif agent_idx == 10:
             print(f"T:{agent.T}; learning rate: {agent.step_size}; alpha: {agent.alpha}")
         else:
             print(f"T:{agent.T}; learning rate: {agent.step_size}")
@@ -256,13 +256,12 @@ def train(agent_idx, env_name="DoorWorldWide3", T=10, lr=1e-3, beta=1, hidden_si
 
         all_reward_sums[env_name].setdefault(algorithm, []).append(reward_sums)
         all_state_visits[env_name].setdefault(algorithm, []).append(state_visits)
-    name_str = '_'.join([str(x) for x in agent_idxes])#+f'_{agent.step_size}'
-    if agent_idxes[0] == 10:
-        file_path = f'metrics/{env_name}/{agent.T}/{agent.step_size}/all_reward_sums_{name_str}_{agent.alpha}.torch'
-    elif agent_idxes[0] == 8:
-        file_path = f'metrics/{env_name}/{agent.T}/{agent.step_size}/all_reward_sums_{name_str}_{agent.hidden_size}.torch'
+    if agent_idx == 10:
+        file_path = f'metrics/{env_name}/{agent.T}/{agent.step_size}/all_reward_sums_{agent_idx}_{agent.alpha}.torch'
+    elif agent_idx == 8:
+        file_path = f'metrics/{env_name}/{agent.T}/{agent.step_size}/all_reward_sums_{agent_idx}_{agent.hidden_size}.torch'
     else:
-        file_path = f'metrics/{env_name}/{T}/{agent.step_size}/all_reward_sums_{name_str}.torch'
+        file_path = f'metrics/{env_name}/{T}/{agent.step_size}/all_reward_sums_{agent_idx}.torch'
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
