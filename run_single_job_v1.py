@@ -233,10 +233,12 @@ def train(agent_idx, env_name="DoorWorldWide3", T=10, lr=1e-3, beta=1, hidden_si
         agent_info["seed"] = run
         np.random.seed(run)
         agent.agent_init(agent_info)
-        if hasattr(agent, "hidden_size") and hasattr(agent, "T"):
+        if agent_idxes[0] == 8::
             print(f"T:{agent.T}; learning rate: {agent.step_size}; hidden size: {agent.hidden_size}")
-        elif hasattr(agent, "T"):
+        elif agent_idxes[0] == 10:
             print(f"T:{agent.T}; learning rate: {agent.step_size}; alpha: {agent.alpha}")
+        else:
+            print(f"T:{agent.T}; learning rate: {agent.step_size})
         reward_sums = []
         state_visits = np.zeros(env.cols * env.rows)
         epsilon = 1
