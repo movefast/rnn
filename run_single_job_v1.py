@@ -238,7 +238,7 @@ def train(agent_idx, env_name="DoorWorldWide3", T=10, lr=1e-3, beta=1, hidden_si
         elif agent_idx == 10:
             print(f"T:{agent.T}; learning rate: {agent.step_size}; alpha: {agent.alpha}")
         else:
-            print(f"T:{agent.T}; learning rate: {agent.step_size}")
+            print(f"T:{T}; learning rate: {agent.step_size}")
         reward_sums = []
         state_visits = np.zeros(env.cols * env.rows)
         epsilon = 1
