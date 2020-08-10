@@ -201,7 +201,7 @@ class RNNAgent(agent.BaseAgent):
 
         if len(self.buffer) > self.T+1 + self.burn_in_len:
             self.batch_train()
-        evaluation.metrics.rep_loss['RNN_Burn'].append(self.episodic_metrics)
+        evaluation.metrics.rep_loss['Burn'].append(self.episodic_metrics)
         self.episodic_metrics = []
 
     def batch_train(self):

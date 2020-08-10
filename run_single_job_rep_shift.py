@@ -173,8 +173,8 @@ def train(agent_idx, env_name="DoorWorldWide3", T=10, lr=1e-3, beta=1, hidden_si
     all_history = {}
 
 
-    num_runs = 1
-    num_episodes = 1
+    num_runs = 30
+    num_episodes = 500
     Environment = envs['Grid-World']
     env_info = env_infos[env_name]
 
