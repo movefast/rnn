@@ -1,11 +1,12 @@
 import numpy as np
-import agent
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+import agent
+import evaluation
 # from replay_buffer_episodic import ReplayMemory, Transition
 from buffer.replay_buffer import ReplayMemory, Transition
-import evaluation
 
 criterion = torch.nn.SmoothL1Loss()
 rep_crit = torch.nn.MSELoss()
@@ -90,6 +91,7 @@ class RNNAgent(agent.BaseAgent):
 
         self.discount = agent_init_info["discount"]
         self.rand_generator = np.random.RandomState(agent_init_info["seed"])
+        self.T = agent_init_info.get("T",10)
 
         self.rnn = SimpleRNN(self.num_states+1, self.num_states+1, self.num_actions).to(device)
         self.target_rnn = SimpleRNN(self.num_states+1, self.num_states+1, self.num_actions).to(device)
@@ -182,7 +184,7 @@ class RNNAgent(agent.BaseAgent):
         self.prev_action = action
         self.steps += 1
 
-        if len(self.buffer) > 20 + self.burn_in_len:# and self.steps % 5 == 0:# and self.epsilon == .1:
+        if len(self.buffer) > self.T+1 + self.burn_in_len:# and self.steps % 5 == 0:# and self.epsilon == .1:
             self.batch_train()
         return action
 
@@ -197,7 +199,7 @@ class RNNAgent(agent.BaseAgent):
             self.buffer.push(self.prev_state, self.prev_action, reward, self.hidden.detach(), 0)
             self.flag = True
 
-        if len(self.buffer) > 20 + self.burn_in_len:
+        if len(self.buffer) > self.T+1 + self.burn_in_len:
             self.batch_train()
         evaluation.metrics.rep_loss['RNN_Burn'].append(self.episodic_metrics)
         self.episodic_metrics = []
@@ -205,7 +207,7 @@ class RNNAgent(agent.BaseAgent):
     def batch_train(self):
         self.train_steps += 1
         self.rnn.train()
-        transitions = self.buffer.sample_successive(11+self.burn_in_len)
+        transitions = self.buffer.sample_successive(self.T+1+self.burn_in_len)
         batch = Transition(*zip(*transitions))
         next_discount_batch = torch.FloatTensor(batch.discount[1:]).to(device)
         state_batch = torch.cat(batch.state[:-1])

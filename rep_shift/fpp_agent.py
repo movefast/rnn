@@ -1,11 +1,12 @@
 import numpy as np
-import agent
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+import agent
+import evaluation
 # from replay_buffer_episodic import ReplayMemory, Transition
 from replay_buffer_index import ReplayMemory, Transition
-import evaluation
 
 criterion = torch.nn.SmoothL1Loss()
 criterion_fpp = torch.nn.MSELoss()
@@ -81,6 +82,7 @@ class RNNAgent(agent.BaseAgent):
         self.discount = agent_init_info["discount"]
         self.rand_generator = np.random.RandomState(agent_init_info["seed"])
         self.beta = agent_init_info.get("beta", 0.5)
+        self.T = agent_init_info.get("T",10)
 
         self.rnn = SimpleRNN(self.num_states+1, self.num_states+1, self.num_actions).to(device)
         self.target_rnn = SimpleRNN(self.num_states+1, self.num_states+1, self.num_actions).to(device)
@@ -174,7 +176,7 @@ class RNNAgent(agent.BaseAgent):
         self.prev_action = action
         self.steps += 1
 
-        if len(self.buffer) > 20:# and self.steps % 5 == 0:# and self.epsilon == .1:
+        if len(self.buffer) > self.T+1:# and self.steps % 5 == 0:# and self.epsilon == .1:
             self.batch_train()
         return action
 
@@ -189,7 +191,7 @@ class RNNAgent(agent.BaseAgent):
             self.buffer.push(self.prev_state, self.prev_action, reward, self.hidden.detach(), 0)
             self.flag = True
 
-        if len(self.buffer) > 20:
+        if len(self.buffer) > self.T+1:
             self.batch_train()
 
         evaluation.metrics.rep_loss['FPP'].append(self.episodic_metrics)
@@ -198,7 +200,7 @@ class RNNAgent(agent.BaseAgent):
     def batch_train(self):
         self.train_steps += 1
         self.rnn.train()
-        transitions, start_index, end_index = self.buffer.sample_successive(11)
+        transitions, start_index, end_index = self.buffer.sample_successive(self.T+1)
         batch = Transition(*zip(*transitions))
 
         state_batch = torch.cat(batch.state[:-1])
